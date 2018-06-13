@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ff585d">
+
+    <script
+        src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous">
+    </script>
+    <link href="https://fonts.googleapis.com/css?family=Fira+Sans" rel="stylesheet">
+    <title>Planta IoT</title>
+</head>
+<body>
+<style>
+* {
+    box-sizing: border-box;
+}
+html {
+    height: 100%;
+}
+body {
+    font-family: 'Fira Sans', sans-serif;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+main {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: scroll;
+    align-items: center;
+    padding: 0 1rem;
+    background: linear-gradient(-45deg, #3B4371, #F3904F);
+}
+.block {
+    box-shadow: 0px 10px 25px 0px rgba(0,0,0,0.14), 0px 5px 12px 0px rgba(0,0,0,0.3);
+    background-color: white;
+    margin: 1rem;
+    text-align: center;
+    display: inline-block;
+    padding: 1rem;
+    width: 100%;
+    max-width: 26rem;
+
+}
+h3 {
+    margin: 0;
+    display: inline-block;
+}
+p {
+    margin: 0;
+}
+.sensor-value {
+    font-size: 3rem;
+    font-weight: bold;
+    margin: 1rem 0;
+    text-transform: capitalize;
+}
+input {
+    display: inline-block;
+    font-family: inherit;
+    font-size: inherit;
+}
+</style>
+    <main>
+        <div class="block">
+                <input class="toggle" data-sensor="dht_t" type="checkbox" id="temperatura" checked>
+                <label for="temperatura"><h3>Temperatura</h3></label>
+                
+                <p class="sensor-value"><span id="dht_t"></span></p>
+                <p><input class="notify" type="checkbox" data-sensor="dht_t" id="not_temperatura"><label for="not_temperatura">Notificar quando atingir <input class="notify-value" value="23" type="number" min="10" max="70">°C</label></p>
+            </div>
+        
+            <div class="block">
+                <input class="toggle" data-sensor="dht_u" type="checkbox" id="umidade" checked>
+                <label for="umidade"><h3>Umidade do ar</h3></label>
+                
+                <p class="sensor-value"><span id="dht_u"></span></p>
+                <p><input class="notify" type="checkbox" data-sensor="dht_u" id="not_umidade_ar"><label for="not_umidade_ar">Notificar quando atingir <input class="notify-value" value="40" type="number" min="0" max="100">%</label></p>
+            </div>
+                
+            <div class="block">
+                <input class="toggle" data-sensor="luz" type="checkbox" id="luminosidade" checked>
+                <label for="luminosidade"><h3>Luminosidade</h3></label>
+                
+                <p class="sensor-value"><span id="luz"></span></p>
+                <p><input class="notify" type="checkbox" data-sensor="luz" id="not_luminosidade"><label for="not_luminosidade">Notificar quando estiver <select class="notify-value">
+                    <option value="alta">Alta</option>
+                    <option value="média">Média</option>
+                    <option value="baixa" selected>Baixa</option>
+                </select></label></p>
+            </div>
+        
+            <div class="block">
+                <input class="toggle" data-sensor="solo" type="checkbox" id="umidade_solo" checked>
+                <label for="umidade_solo"><h3>Umidade do solo</h3></label>
+                
+                <p class="sensor-value"><span id="solo"></span></p>
+                <p><input class="notify" type="checkbox" data-sensor="solo" id="not_umidade_solo"><label for="not_umidade_solo">Notificar quando estiver <select class="notify-value">
+                    <option value="alta">Alta</option>
+                    <option value="média">Média</option>
+                    <option value="baixa" selected>Baixa</option>
+                </select></label></p>
+            </div>
+    </main>
+
+<script>
+
+$(document).ready(function() {
+    updateValues();
+});
+
+setInterval(function() {
+    updateValues();
+}, 1000);
+
+
+
+$('.notify').click(function() {
+    var sensor = $(this).data('sensor');
+    var value = $(this).is(':checked');
+    var option = $(this).siblings('label').find('.notify-value').val();
+    console.log(sensor, value, option);
+    if (value) {
+        $.get(`/notify/${sensor}/${option}`);
+    } else {
+        $.get(`/notify/${sensor}/${false}`);
+    }
+});
+
+$('.notify-value').change(function(){
+    var sensor = $(this).parent().siblings('input').data('sensor');
+    var value = $(this).parent().siblings('input').is(':checked');
+    var option = $(this).val();
+    console.log(sensor, value, option);
+    if (value) {
+        $.get(`/notify/${sensor}/${option}`);
+    } else {
+        $.get(`/notify/${sensor}/${false}`);
+    }
+});
+
+$('.toggle').click(function() {
+    var sensor = $(this).data('sensor');
+    var value = $(this).is(':checked');
+    console.log('Sensor', sensor, value);
+    $.get('/toggle/' + sensor + '/' + value);
+});
+
+function updateValues() {
+    $.get('/dht_t', function(data) {
+        if (data != 'off') {
+            data += ' °C';
+            $("#dht_t").text(data);
+            $("#temperatura").prop("checked", true);
+        } else {
+            $("#dht_t").text('OFF');
+            $("#temperatura").prop("checked", false);
+        }
+    });
+    $.get('/dht_u', function(data) {
+        if (data != 'off') {
+            data += ' %';
+            $("#dht_u").text(data);
+            $("#umidade").prop("checked", true);
+        } else {            
+            $("#dht_u").text('OFF');
+            $("#umidade").prop("checked", false);
+        }
+    });
+    $.get('/luz', function(data) {
+        if (data != 'off') {
+            $("#luz").text(data);
+            $("#luminosidade").prop("checked", true);
+        } else {            
+            $("#luz").text('OFF');
+            $("#luminosidade").prop("checked", false);
+        }
+    });
+    $.get('/solo', function(data) {
+        if (data != 'off') {
+            $("#solo").text(data);
+            $("#umidade_solo").prop("checked", true);
+        } else {            
+            $("#solo").text('OFF');
+            $("#umidade_solo").prop("checked", false);
+        }
+    });
+}
+
+</script>
+</body>
+</html>
