@@ -90,6 +90,13 @@ client.on('message', (topic, message) => {
     console.log('Sensores atualizados', leituraSensores);
 });
 
+app.get('/TIMER', (req, res) => {
+    console.log('setting timer on');
+    client.publish('TIMER', 'ON');
+    res.sendStatus(200);
+});
+
+
 app.get('/:sensor', (req, res) => {
     let value = leituraSensores[req.params.sensor] || 'off';
     res.send(value.toString());
@@ -112,7 +119,6 @@ app.get('/TOGGLE/:sensor/:value', (req, res) => {
     }
     res.sendStatus(200);
 });
-
 // A cada 10 min desbloqueia as notificações
 setInterval(function() {
     notificacoesLock.dht_u = false;
