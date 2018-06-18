@@ -116,9 +116,19 @@ input {
                     <option value="baixa" selected>Baixa</option>
                 </select></label></p>
             </div>
+
+            <div class="block">
+                <h3>Bomba de água</h3>
+                <br>
+                <button style="margin-top: 1rem;" id="bomba">Ligar</button>
+            </div>
     </main>
 
 <script>
+
+$('#bomba').click(function (){
+    $.get('/TIMER');
+});
 
 $(document).ready(function() {
     updateValues();
